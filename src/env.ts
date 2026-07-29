@@ -19,6 +19,14 @@ const envSchema = z.object({
   STRIPE_SECRET_KEY: z.string().optional(),
 
   REVALIDATE_SECRET: z.string().optional(),
+
+  // --- Customer accounts (WordPress-backed) ---
+  // JWT signing secret. Must match `JWT_AUTH_SECRET_KEY` in wp-config.php
+  // so tokens minted by either side validate on the other.
+  JWT_AUTH_SECRET_KEY: z.string().optional(),
+  // Shared server-to-server token gating /wp-json/phantom/v1/auth/register
+  // and /activity. Set the same value in WP admin → Phantom Accounts.
+  PHANTOM_SERVICE_TOKEN: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse({
@@ -34,6 +42,8 @@ const parsed = envSchema.safeParse({
   WC_STORE_API_VERSION: process.env.WC_STORE_API_VERSION,
   STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
   REVALIDATE_SECRET: process.env.REVALIDATE_SECRET,
+  JWT_AUTH_SECRET_KEY: process.env.JWT_AUTH_SECRET_KEY,
+  PHANTOM_SERVICE_TOKEN: process.env.PHANTOM_SERVICE_TOKEN,
 });
 
 if (!parsed.success) {
