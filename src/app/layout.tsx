@@ -82,9 +82,9 @@ export default async function RootLayout({
         />
         <TikTokPixel />
         <Providers initialCart={null}>
-          <AgeGate />
           {!bareChrome && (
             <>
+              <AgeGate />
               <PromoModal />
               <AnnouncementBar />
               <Navbar />
