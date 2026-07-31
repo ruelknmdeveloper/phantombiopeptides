@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peptide Research Quiz — Phantom Bio Peptides</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff; --card:rgba(255,255,255,.9); --border:hsl(220 14% 90%);
+    --border-strong:hsl(220 14% 82%); --input:hsl(220 14% 96%);
+    --fg:hsl(224 47% 10%); --muted:hsl(220 10% 40%);
+    --destructive:hsl(0 72% 51%);
+    --brand-50:hsl(264 100% 97%); --brand-100:hsl(264 100% 94%);
+    --brand-200:hsl(264 100% 87%); --brand-300:hsl(264 100% 76%);
+    --brand-500:hsl(264 100% 34%); --brand-600:hsl(264 100% 28%);
+    --brand-700:hsl(264 100% 22%);
+    --radius:20px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--fg);font-family:"Barlow",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5}
+  body{
+    min-height:100vh;padding:64px 16px;position:relative;overflow-x:hidden;
+    background:
+      radial-gradient(1200px 500px at 85% -10%, hsla(264,100%,94%,.9) 0%, transparent 65%),
+      radial-gradient(900px 400px at -10% 110%, hsl(264 100% 97%) 0%, transparent 55%),
+      #ffffff;
+  }
+  body::before{
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.03;
+    background:radial-gradient(circle at 1px 1px, hsl(264 100% 34%) 1px, transparent 0);
+    background-size:22px 22px;
+  }
+  .display{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:800;letter-spacing:-.5px}
+  .container{position:relative;max-width:576px;margin:0 auto}
+  .brand{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:32px}
+  .brand img{height:40px;width:auto;object-fit:contain}
+  .brand .trust{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.28em;color:var(--muted)}
+  .card-wrap{position:relative}
+  .card-glow{
+    position:absolute;inset:-16px -24px;z-index:-1;border-radius:36px;filter:blur(24px);opacity:.7;
+    background:linear-gradient(140deg, hsla(264,100%,87%,.5) 0%, hsla(264,100%,94%,.2) 50%, transparent 100%);
+  }
+  .card{
+    overflow:hidden;border:1px solid rgba(230,230,235,.7);background:var(--card);
+    border-radius:24px;backdrop-filter:blur(12px);
+    box-shadow:0 30px 80px -40px hsla(264,100%,34%,.35);
+  }
+  .progress{height:4px;width:100%;background:var(--brand-50)}
+  .progress-fill{height:100%;width:0;transition:width .5s ease;
+    background:linear-gradient(90deg, var(--brand-500), var(--brand-300));}
+  .body{padding:40px 32px 32px}
+  @media(min-width:640px){.body{padding:40px}}
+  .step{animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .center{text-align:center}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;padding:4px 12px;border-radius:9999px;
+    border:1px solid var(--brand-200);background:hsla(264,100%,97%,.7);
+    color:var(--brand-700);font-size:10px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;
+  }
+  h1{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:800;font-size:30px;line-height:1.1;letter-spacing:-.5px;margin:8px 0}
+  h2{font-family:"Barlow Condensed","Barlow",sans-serif;font-weight:800;font-size:24px;line-height:1.1;letter-spacing:-.4px;margin:0}
+  @media(min-width:640px){h1{font-size:36px}h2{font-size:30px}}
+  .gradient{
+    background:linear-gradient(120deg, var(--brand-500), var(--brand-300));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{color:var(--muted);font-size:14px;margin:8px 0 0}
+  .space{display:flex;flex-direction:column;gap:20px;margin-top:32px}
+  .field{display:flex;flex-direction:column;gap:8px}
+  label{font-size:14px;font-weight:500;color:hsla(224,47%,10%,.9)}
+  input[type=text],input[type=tel],input[type=email]{
+    width:100%;height:44px;padding:8px 16px;border:1px solid var(--border);
+    background:var(--input);color:var(--fg);border-radius:12px;font-size:14px;
+    font-family:inherit;transition:border-color .15s;
+  }
+  input:focus{outline:none;border-color:hsla(264,100%,34%,.5);box-shadow:0 0 0 2px hsl(264 100% 34% / .2)}
+  .opts{display:flex;flex-direction:column;gap:8px}
+  .opt{
+    display:flex;align-items:center;gap:12px;padding:14px 16px;width:100%;
+    border:1px solid var(--border);background:transparent;border-radius:16px;
+    text-align:left;cursor:pointer;transition:all .15s;font-family:inherit;
+  }
+  .opt:hover{border-color:var(--brand-300);background:hsla(264,100%,97%,.3)}
+  .opt.sel{border-color:var(--brand-500);background:hsla(264,100%,97%,.6)}
+  .opt .marker{
+    flex:0 0 20px;height:20px;border:2px solid var(--border-strong);
+    display:flex;align-items:center;justify-content:center;background:#fff;transition:all .15s;
+  }
+  .opt.radio .marker{border-radius:50%}
+  .opt.check .marker{border-radius:6px}
+  .opt.sel .marker{background:var(--brand-500);border-color:var(--brand-500);color:#fff}
+  .opt .txt{font-size:14px;color:var(--fg)}
+  .opt .marker svg{width:12px;height:12px;stroke-width:3.5}
+  .err{
+    padding:8px 12px;border-radius:8px;border:1px solid hsla(0,72%,51%,.3);
+    background:hsla(0,72%,51%,.05);color:var(--destructive);font-size:14px;
+  }
+  .nav{display:flex;align-items:center;gap:12px;padding-top:8px}
+  button{font-family:inherit;cursor:pointer}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:0 24px;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;transition:all .2s;border:none;height:48px;
+  }
+  .btn.primary{background:var(--brand-500);color:#fff}
+  .btn.primary:hover{filter:brightness(1.1)}
+  .btn.primary:disabled{opacity:.5;cursor:not-allowed}
+  .btn.ghost{background:transparent;color:var(--muted);padding:0 12px}
+  .btn.ghost:hover{color:var(--fg)}
+  .btn.full{width:100%}
+  .consent{
+    display:flex;gap:12px;align-items:flex-start;padding:16px;cursor:pointer;
+    border:1px solid var(--border);border-radius:16px;transition:all .15s;font-size:14px;color:var(--muted);line-height:1.55;
+  }
+  .consent:hover{border-color:var(--brand-300)}
+  .consent.sel{border-color:var(--brand-500);background:hsla(264,100%,97%,.6)}
+  .consent input{margin-top:2px;flex:0 0 auto;width:16px;height:16px;accent-color:var(--brand-500)}
+  .done{text-align:center}
+  .done .check{
+    margin:0 auto 24px;width:64px;height:64px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    background:linear-gradient(135deg, var(--brand-500) 0%, var(--brand-300) 100%);
+  }
+  .done .check svg{width:32px;height:32px;stroke-width:3}
+  .download{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    height:48px;padding:0 32px;border-radius:8px;text-decoration:none;
+    background:var(--brand-500);color:#fff;font-size:14px;font-weight:600;
+    letter-spacing:.06em;text-transform:uppercase;transition:filter .2s;margin-top:24px;
+  }
+  .download:hover{filter:brightness(1.1)}
+  .catalog{display:block;margin-top:16px;color:var(--brand-600);font-size:14px;text-decoration:none}
+  .catalog:hover{color:var(--brand-500)}
+  .fda{
+    max-width:576px;margin:24px auto 0;font-size:11px;line-height:1.6;
+    color:var(--muted);text-align:center;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header class="brand">
+      <img src="https://i0.wp.com/kickbackai-pkjdo.wpcomstaging.com/wp-content/uploads/2026/06/PHANTOM-BIO-LABS-4.png?w=1500&ssl=1"
+           alt="Phantom Bio Peptides"
+           onerror="this.style.display='none'">
+      <p class="trust">99% HPLC verified · ISL Labs certified</p>
+    </header>
+    <div class="card-wrap">
+      <div class="card-glow" aria-hidden="true"></div>
+      <div class="card">
+        <div class="progress"><div class="progress-fill" id="bar"></div></div>
+        <div class="body" id="body"></div>
+      </div>
+    </div>
+    <p class="fda">
+      FDA Disclosure: The statements on this website have not been evaluated
+      by the U.S. Food and Drug Administration. Compounds are for laboratory
+      research and in-vitro use only — not for human consumption.
+    </p>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Where lead data is sent. Points at the phantombiopeptides.com Next
+  // API, which forwards to WordPress with the server-side service token.
+  var LEAD_ENDPOINT = "https://phantombiopeptides.com/api/quiz-lead";
+  var SHOP_URL      = "https://phantombiopeptides.com/shop";
+
+  var QUESTIONS = [
+    { id:"q1", multi:false, title:"What brought you to Phantom Bio Peptides today?",
+      options:[
+        "I’m completely new to peptide research",
+        "I keep hearing about peptides and want to learn more",
+        "I’m researching a specific compound",
+        "I want to compare different peptide categories",
+        "I’m looking for a reliable research supplier",
+        "Someone referred me to Phantom"
+      ]},
+    { id:"q2", multi:false, title:"Which area of peptide research interests you most?",
+      options:[
+        "Metabolic and appetite-signaling research",
+        "Skin and cosmetic research",
+        "Tissue-repair and inflammatory-pathway research",
+        "Cognitive, neurological, and sleep research",
+        "Mitochondrial, energy, and longevity research",
+        "Growth-hormone and endocrine research",
+        "Reproductive and hormonal research",
+        "I’m not sure yet"
+      ]},
+    { id:"q3", multi:true, title:"Which compounds are you most interested in learning about?", note:"Select all that apply",
+      options:[
+        "Semaglutide, Tirzepatide, Retatrutide, or Cagrilintide",
+        "BPC-157, TB-500, KPV, GLOW, or KLOW",
+        "GHK-Cu or Snap-8",
+        "Semax, Selank, DSIP, or Pinealon",
+        "MOTS-c, SS-31, Epithalon, NAD+, or Glutathione",
+        "CJC + Ipamorelin, Tesamorelin, GHRP-2, GHRP-6, or IGF-1 LR3",
+        "HCG, Kisspeptin, PT-141, or MT-2",
+        "I’m not sure which compound yet"
+      ]},
+    { id:"q4", multi:false, title:"What would you most like to understand?",
+      options:[
+        "What different peptides are",
+        "What researchers study them for",
+        "How similar compounds compare",
+        "Scientific mechanisms and receptor pathways",
+        "Human evidence versus laboratory or animal research",
+        "Risks, limitations, and regulatory status",
+        "COAs, purity testing, and product documentation",
+        "A beginner-friendly overview of everything"
+      ]},
+    { id:"q5", multi:false, title:"How familiar are you with peptide research?",
+      options:[
+        "I’m completely new",
+        "I know a few basic terms",
+        "I’ve researched several compounds",
+        "I regularly read studies and scientific content",
+        "I work in a scientific, medical, or laboratory-related field"
+      ]}
+  ];
+
+  var data = { firstName:"", phone:"", email:"", consent:false };
+  QUESTIONS.forEach(function(q){ data[q.id] = q.multi ? [] : ""; });
+
+  var body       = document.getElementById("body");
+  var bar        = document.getElementById("bar");
+  var TOTAL      = 1 /*contact*/ + QUESTIONS.length + 1 /*consent*/;
+  var step       = 0;
+  var startedSig = "";
+  var pdfUrl     = null;
+
+  var CHECK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  var DOWN_SVG  = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>';
+  var LEFT_SVG  = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>';
+
+  function postLead(payload){
+    try{
+      fetch(LEAD_ENDPOINT,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(payload),
+        keepalive:true
+      }).then(function(r){ return r.json().catch(function(){ return null; }); })
+        .then(function(j){ if(j && typeof j.pdf_url === "string"){ pdfUrl = j.pdf_url; } })
+        .catch(function(){});
+    }catch(e){}
+  }
+
+  function readUtm(){
+    try{
+      var p = new URLSearchParams(window.location.search);
+      var out = {};
+      if(p.get("utm_source"))   out.utm_source   = p.get("utm_source");
+      if(p.get("utm_medium"))   out.utm_medium   = p.get("utm_medium");
+      if(p.get("utm_campaign")) out.utm_campaign = p.get("utm_campaign");
+      return out;
+    }catch(e){ return {}; }
+  }
+
+  function captureStarted(){
+    var sig = data.email+"|"+data.phone+"|"+data.firstName;
+    if(sig === startedSig) return;
+    startedSig = sig;
+    var payload = {
+      stage:"started", first_name:data.firstName, phone:data.phone, email:data.email,
+      referrer: document.referrer || undefined
+    };
+    var utm = readUtm();
+    for(var k in utm){ payload[k] = utm[k]; }
+    postLead(payload);
+  }
+
+  function captureCompleted(){
+    var payload = {
+      stage:"completed", first_name:data.firstName, phone:data.phone, email:data.email,
+      consent:true,
+      answers: QUESTIONS.map(function(q){
+        return { id:q.id, question:q.title, answer:data[q.id] };
+      }),
+      referrer: document.referrer || undefined
+    };
+    var utm = readUtm();
+    for(var k in utm){ payload[k] = utm[k]; }
+    postLead(payload);
+  }
+
+  function setBar(){
+    var pct = step >= TOTAL ? 100 : Math.round((step / TOTAL) * 100);
+    bar.style.width = pct + "%";
+  }
+
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function render(){
+    setBar();
+    if(step === 0)                          return renderContact();
+    if(step >= 1 && step <= QUESTIONS.length) return renderQuestion(QUESTIONS[step - 1]);
+    if(step === TOTAL - 1)                   return renderConsent();
+    return renderDone();
+  }
+
+  function renderContact(){
+    body.innerHTML =
+      '<div class="step">' +
+        '<div class="center">' +
+          '<span class="eyebrow">Free Research Guide</span>' +
+          '<h1 class="display">Take the <span class="gradient">60-second</span> research quiz</h1>' +
+          '<p class="sub">Answer 5 quick questions and get our free Researcher’s Field Guide to Peptide Handling. First, where should we send it?</p>' +
+        '</div>' +
+        '<form class="space" id="contactForm" novalidate>' +
+          '<div class="field"><label for="firstName">First name</label>' +
+            '<input id="firstName" type="text" autocomplete="given-name" required value="' + esc(data.firstName) + '"></div>' +
+          '<div class="field"><label for="phone">Phone number</label>' +
+            '<input id="phone" type="tel" autocomplete="tel" required value="' + esc(data.phone) + '"></div>' +
+          '<div class="field"><label for="email">Email address</label>' +
+            '<input id="email" type="email" autocomplete="email" placeholder="you@example.com" required value="' + esc(data.email) + '"></div>' +
+          '<div id="err" style="display:none" class="err"></div>' +
+          '<button type="submit" class="btn primary full">Start the quiz →</button>' +
+        '</form>' +
+      '</div>';
+
+    document.getElementById("contactForm").addEventListener("submit", function(ev){
+      ev.preventDefault();
+      data.firstName = document.getElementById("firstName").value.trim();
+      data.phone     = document.getElementById("phone").value.trim();
+      data.email     = document.getElementById("email").value.trim();
+      var e = document.getElementById("err");
+      var show = function(msg){ e.textContent = msg; e.style.display = "block"; };
+      if(!data.firstName) return show("Please enter your first name.");
+      if(data.phone.replace(/[^0-9]/g,"").length < 7) return show("Please enter a valid phone number.");
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) return show("Please enter a valid email address.");
+      captureStarted();
+      step++; render();
+    });
+  }
+
+  function renderQuestion(q){
+    var selected = data[q.id];
+    var opts = q.options.map(function(opt){
+      var isSel = q.multi ? (selected.indexOf(opt) > -1) : (selected === opt);
+      return '<button type="button" class="opt ' + (q.multi ? 'check' : 'radio') + (isSel ? ' sel' : '') + '" data-opt="' + esc(opt) + '">' +
+               '<span class="marker">' + (isSel ? CHECK_SVG : '') + '</span>' +
+               '<span class="txt">' + esc(opt) + '</span>' +
+             '</button>';
+    }).join("");
+
+    body.innerHTML =
+      '<div class="step">' +
+        '<div class="eyebrow">Question ' + step + ' of ' + QUESTIONS.length + (q.note ? ' · ' + q.note : '') + '</div>' +
+        '<h2 class="display" style="margin-top:8px">' + esc(q.title) + '</h2>' +
+        '<div class="opts" style="margin-top:24px">' + opts + '</div>' +
+        '<div id="err" style="display:none;margin-top:16px" class="err"></div>' +
+        '<div class="nav">' +
+          '<button type="button" class="btn ghost" id="back">' + LEFT_SVG + ' Back</button>' +
+          '<button type="button" class="btn primary" style="flex:1" id="next">Continue →</button>' +
+        '</div>' +
+      '</div>';
+
+    Array.prototype.forEach.call(body.querySelectorAll(".opt"), function(el){
+      el.onclick = function(){
+        var opt = el.getAttribute("data-opt");
+        if(q.multi){
+          var idx = data[q.id].indexOf(opt);
+          if(idx > -1){ data[q.id].splice(idx, 1); }
+          else{ data[q.id].push(opt); }
+        } else {
+          data[q.id] = opt;
+        }
+        renderQuestion(q); // rerender to update selected state
+      };
+    });
+    document.getElementById("back").onclick = function(){ step--; render(); };
+    document.getElementById("next").onclick = function(){
+      var ans = data[q.id];
+      var empty = q.multi ? ans.length === 0 : !ans;
+      var e = document.getElementById("err");
+      if(empty){ e.textContent = "Please choose an option to continue."; e.style.display = "block"; return; }
+      step++; render();
+    };
+  }
+
+  function renderConsent(){
+    body.innerHTML =
+      '<div class="step">' +
+        '<div class="center">' +
+          '<span class="eyebrow">One last step</span>' +
+          '<h2 class="display">Get your <span class="gradient">free guide</span></h2>' +
+          '<p class="sub">Confirm below and we’ll send your Researcher’s Field Guide to Peptide Handling straight to your inbox.</p>' +
+        '</div>' +
+        '<label class="consent ' + (data.consent ? 'sel' : '') + '" id="consentBox" style="margin-top:32px">' +
+          '<input type="checkbox" id="consent" ' + (data.consent ? 'checked' : '') + '>' +
+          '<span>I confirm I am acquiring materials for laboratory research use only, and I agree to receive my research guide and related research resources from Phantom Bio Peptides. I can unsubscribe anytime.</span>' +
+        '</label>' +
+        '<div id="err" style="display:none;margin-top:16px" class="err"></div>' +
+        '<div class="nav">' +
+          '<button type="button" class="btn ghost" id="back">' + LEFT_SVG + ' Back</button>' +
+          '<button type="button" class="btn primary" style="flex:1" id="submit">Send my guide →</button>' +
+        '</div>' +
+      '</div>';
+
+    var cb = document.getElementById("consent");
+    var box = document.getElementById("consentBox");
+    cb.onchange = function(){
+      data.consent = cb.checked;
+      box.classList.toggle("sel", cb.checked);
+    };
+    document.getElementById("back").onclick = function(){ step--; render(); };
+    document.getElementById("submit").onclick = function(){
+      var e = document.getElementById("err");
+      if(!data.consent){ e.textContent = "Please confirm to receive your guide."; e.style.display = "block"; return; }
+      captureCompleted();
+      step++; render();
+    };
+  }
+
+  function renderDone(){
+    setBar();
+    body.innerHTML =
+      '<div class="step done">' +
+        '<div class="check">' + CHECK_SVG + '</div>' +
+        '<h2 class="display">You’re all set, ' + esc(data.firstName || "researcher") + '.</h2>' +
+        '<p class="sub" style="margin-top:8px">' +
+          'Your Researcher’s Field Guide is on its way to <strong style="color:var(--fg)">' + esc(data.email) + '</strong>. ' +
+          'Check your inbox (and spam folder, just in case).' +
+        '</p>' +
+        (pdfUrl
+          ? '<a class="download" href="' + esc(pdfUrl) + '" target="_blank" rel="noopener">' + DOWN_SVG + ' Download the guide now</a>'
+          : '<div id="pdfSlot"></div>') +
+        '<a class="catalog" href="' + SHOP_URL + '">Or browse the research catalog →</a>' +
+      '</div>';
+
+    // The completion POST is fire-and-forget; the pdf_url may arrive a
+    // moment after we render. If it does, drop the download button in.
+    if(!pdfUrl){
+      var checkPdf = setInterval(function(){
+        if(pdfUrl){
+          clearInterval(checkPdf);
+          var slot = document.getElementById("pdfSlot");
+          if(slot){
+            slot.outerHTML =
+              '<a class="download" href="' + esc(pdfUrl) + '" target="_blank" rel="noopener">' + DOWN_SVG + ' Download the guide now</a>';
+          }
+        }
+      }, 250);
+      setTimeout(function(){ clearInterval(checkPdf); }, 15000);
+    }
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
