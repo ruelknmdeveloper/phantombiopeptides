@@ -170,8 +170,10 @@
 
   // Where lead data is sent. Points at the phantombiopeptides.com Next
   // API, which forwards to WordPress with the server-side service token.
-  var LEAD_ENDPOINT = "https://phantombiopeptides.com/api/quiz-lead";
-  var SHOP_URL      = "https://phantombiopeptides.com/shop";
+  // NOTE: uses www. because the apex 308-redirects there, and some
+  // browsers refuse to follow cross-origin POST redirects cleanly.
+  var LEAD_ENDPOINT = "https://www.phantombiopeptides.com/api/quiz-lead";
+  var SHOP_URL      = "https://www.phantombiopeptides.com/shop";
 
   var QUESTIONS = [
     { id:"q1", multi:false, title:"What brought you to Phantom Bio Peptides today?",

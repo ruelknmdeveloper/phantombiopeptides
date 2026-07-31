@@ -54,7 +54,7 @@ Common patterns:
 
 ## No environment variables needed
 
-The quiz posts to `https://phantombiopeptides.com/api/quiz-lead`
+The quiz posts to `https://www.phantombiopeptides.com/api/quiz-lead`
 (hardcoded near the top of `<script>`). CORS is wide open on that
 endpoint — this page can live on any domain and still capture leads.
 

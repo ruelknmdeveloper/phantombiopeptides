@@ -33,7 +33,7 @@ page.on("console", (m) => {
 
 // Intercept the production API — Keanu's deploy will hit this in real life.
 const leadPayloads = [];
-await ctx.route("**/phantombiopeptides.com/api/quiz-lead", async (route) => {
+await ctx.route("**/www.phantombiopeptides.com/api/quiz-lead", async (route) => {
   const req = route.request();
   const body = req.postDataJSON();
   leadPayloads.push(body);
