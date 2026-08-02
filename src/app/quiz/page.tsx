@@ -15,7 +15,11 @@ export const metadata: Metadata = {
 
 export default function QuizPage() {
   return (
-    <main
+    <div
+      // `data-bare-page` triggers the site-chrome-hiding CSS in
+      // globals.css so this route renders standalone (no navbar,
+      // footer, cart drawer, age gate, promo modal, or back-to-top).
+      data-bare-page
       className="relative min-h-[calc(100dvh-4rem)] overflow-hidden px-4 py-16"
       style={{
         background:
@@ -56,6 +60,6 @@ export default function QuizPage() {
         </div>
         <QuizFlow />
       </div>
-    </main>
+    </div>
   );
 }

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Barlow, Barlow_Condensed } from "next/font/google";
-import { headers } from "next/headers";
 import Script from "next/script";
 import { CategoriesService } from "@/services/categories";
 import { Providers } from "@/providers";
@@ -40,17 +39,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-// Standalone landing pages skip the navbar/footer entirely — every
-// nav link is an exit off a paid-ad funnel. Extend this prefix list as
-// we add more ad LPs.
-const BARE_CHROME_PREFIXES = ["/quiz"];
-
-function pathIsBare(pathname: string): boolean {
-  return BARE_CHROME_PREFIXES.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
-}
-
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -60,12 +48,11 @@ export default async function RootLayout({
   // /product/[slug] and /category/[slug] can stay static + ISR.
   const categories = await CategoriesService.list().catch(() => []);
 
-  // The pathname is injected by src/proxy.ts on every page request.
-  // Fall back to "/" if the header is missing (e.g. during a build
-  // pre-render) — treat that as "not bare".
-  const pathname = (await headers()).get("x-pl-pathname") ?? "/";
-  const bareChrome = pathIsBare(pathname);
-
+  // Standalone landing pages (/quiz) opt out of site chrome via a
+  // CSS `:has()` rule in globals.css that checks for a `[data-bare-page]`
+  // marker inside <main>. Server-rendered, zero-JS, no hydration flash,
+  // and — critically — doesn't force this layout to be dynamic (which
+  // would break SSG for product/category pages).
   return (
     <html
       lang="en"
@@ -82,22 +69,18 @@ export default async function RootLayout({
         />
         <TikTokPixel />
         <Providers initialCart={null}>
-          {!bareChrome && (
-            <>
-              <AgeGate />
-              <PromoModal />
-              <AnnouncementBar />
-              <Navbar />
-              <CartDrawer />
-            </>
-          )}
+          <div data-site-chrome>
+            <AgeGate />
+            <PromoModal />
+            <AnnouncementBar />
+            <Navbar />
+            <CartDrawer />
+          </div>
           <main className="flex-1">{children}</main>
-          {!bareChrome && (
-            <>
-              <Footer categories={categories} />
-              <BackToTop />
-            </>
-          )}
+          <div data-site-chrome>
+            <Footer categories={categories} />
+            <BackToTop />
+          </div>
         </Providers>
       </body>
     </html>
