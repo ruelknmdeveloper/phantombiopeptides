@@ -48,11 +48,6 @@ export default async function RootLayout({
   // /product/[slug] and /category/[slug] can stay static + ISR.
   const categories = await CategoriesService.list().catch(() => []);
 
-  // Standalone landing pages (/quiz) opt out of site chrome via a
-  // CSS `:has()` rule in globals.css that checks for a `[data-bare-page]`
-  // marker inside <main>. Server-rendered, zero-JS, no hydration flash,
-  // and — critically — doesn't force this layout to be dynamic (which
-  // would break SSG for product/category pages).
   return (
     <html
       lang="en"
@@ -69,18 +64,14 @@ export default async function RootLayout({
         />
         <TikTokPixel />
         <Providers initialCart={null}>
-          <div data-site-chrome>
-            <AgeGate />
-            <PromoModal />
-            <AnnouncementBar />
-            <Navbar />
-            <CartDrawer />
-          </div>
+          <AgeGate />
+          <PromoModal />
+          <AnnouncementBar />
+          <Navbar />
+          <CartDrawer />
           <main className="flex-1">{children}</main>
-          <div data-site-chrome>
-            <Footer categories={categories} />
-            <BackToTop />
-          </div>
+          <Footer categories={categories} />
+          <BackToTop />
         </Providers>
       </body>
     </html>

@@ -168,14 +168,6 @@
     font-family: var(--font-sans);
   }
 
-  /* Standalone landing pages (e.g. /quiz) mark their <main> content
-     with `data-bare-page` to hide all site chrome. Server-rendered
-     purely via CSS — no JS, no FOUC, no hydration mismatch, and
-     doesn't force the root layout to be dynamic. */
-  body:has(main [data-bare-page]) [data-site-chrome] {
-    display: none;
-  }
-
   ::selection {
     background: hsl(var(--brand-500));
     color: #fff;
