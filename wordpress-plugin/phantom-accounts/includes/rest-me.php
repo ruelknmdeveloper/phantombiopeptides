@@ -56,9 +56,62 @@ class Phantom_Accounts_REST_Me {
 			}
 		}
 
+		// Billing + shipping addresses via WC_Customer setters. Both
+		// blocks are optional; individual fields inside a block are
+		// merged, so callers can PATCH only what changed.
+		if ( class_exists( 'WC_Customer' ) ) {
+			$customer = new WC_Customer( $user->ID );
+
+			$billing = $req->get_param( 'billing' );
+			if ( is_array( $billing ) ) {
+				self::apply_address( $customer, 'billing', $billing );
+			}
+
+			$shipping = $req->get_param( 'shipping' );
+			if ( is_array( $shipping ) ) {
+				self::apply_address( $customer, 'shipping', $shipping );
+			}
+
+			if ( is_array( $billing ) || is_array( $shipping ) ) {
+				$customer->save();
+			}
+		}
+
 		Phantom_Accounts_Activity::log( $user->ID, 'profile_updated', [] );
 
 		return self::shape( wp_get_current_user() );
+	}
+
+	/**
+	 * Copy allow-listed fields from a caller-supplied address blob onto
+	 * the WC_Customer object. Ignores unknown keys. Everything gets
+	 * sanitized via sanitize_text_field (email + postcode + country
+	 * separately via their appropriate sanitizers).
+	 */
+	private static function apply_address( WC_Customer $customer, string $type, array $data ) : void {
+		$allowed = [
+			'first_name', 'last_name', 'company',
+			'address_1', 'address_2', 'city', 'state',
+			'postcode', 'country',
+		];
+		if ( $type === 'billing' ) {
+			$allowed[] = 'email';
+			$allowed[] = 'phone';
+		}
+		foreach ( $allowed as $key ) {
+			if ( ! array_key_exists( $key, $data ) ) continue;
+			$value = $data[ $key ];
+			if ( ! is_string( $value ) ) continue;
+
+			$sanitized = $key === 'email'
+				? sanitize_email( $value )
+				: sanitize_text_field( $value );
+
+			$setter = "set_{$type}_{$key}";
+			if ( method_exists( $customer, $setter ) ) {
+				$customer->{$setter}( $sanitized );
+			}
+		}
 	}
 
 	private static function shape( WP_User $user ) : array {

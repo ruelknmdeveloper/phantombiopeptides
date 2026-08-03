@@ -3,7 +3,7 @@
  * Plugin Name:       Phantom Accounts
  * Plugin URI:        https://phantombiopeptides.com
  * Description:       Headless-friendly customer account layer for the Next.js storefront. Wishlist, notification prefs, magic-link + set-password token flow, and CRM activity log — all backed by WordPress/WooCommerce as the single source of truth.
- * Version:           0.1.0
+ * Version:           0.2.0
  * Requires at least: 6.4
  * Requires PHP:      8.0
  * Author:            Phantom Labs
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'PHANTOM_ACCOUNTS_VERSION', '0.1.0' );
+define( 'PHANTOM_ACCOUNTS_VERSION', '0.2.0' );
 define( 'PHANTOM_ACCOUNTS_FILE', __FILE__ );
 define( 'PHANTOM_ACCOUNTS_DIR', plugin_dir_path( __FILE__ ) );
 define( 'PHANTOM_ACCOUNTS_REST_NS', 'phantom/v1' );

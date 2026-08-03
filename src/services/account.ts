@@ -49,9 +49,37 @@ export interface AccountOrderSummary {
   line_items_count: number;
 }
 
+export interface NotificationPrefs {
+  order_updates: boolean;
+  back_in_stock: boolean;
+  price_drops: boolean;
+  new_arrivals: boolean;
+  promotions: boolean;
+  newsletter: boolean;
+  channels: { email: boolean; sms: boolean; push: boolean };
+}
+
+export interface WishlistItem {
+  product_id: number;
+  variation_id?: number | null;
+  added_at: string;
+}
+
 export const AccountService = {
   async getProfile(bearer: string): Promise<AccountProfile> {
     return phantom<AccountProfile>("/me", { bearer, revalidate: 30 });
+  },
+
+  async getNotifications(bearer: string): Promise<NotificationPrefs> {
+    return phantom<NotificationPrefs>("/notifications", { bearer, revalidate: 30 });
+  },
+
+  async getWishlist(bearer: string): Promise<WishlistItem[]> {
+    const res = await phantom<{ items: WishlistItem[] }>("/wishlist", {
+      bearer,
+      revalidate: 30,
+    });
+    return res.items ?? [];
   },
 
   /**

@@ -62,6 +62,12 @@ class Phantom_Accounts_REST_Auth {
 			'permission_callback' => [ __CLASS__, 'permit_service' ],
 			'callback'            => [ __CLASS__, 'register_and_set_password' ],
 		] );
+
+		register_rest_route( $ns, '/auth/change-password', [
+			'methods'             => 'POST',
+			'permission_callback' => [ 'Phantom_Accounts_JWT', 'require_user' ],
+			'callback'            => [ __CLASS__, 'change_password' ],
+		] );
 	}
 
 	/**
@@ -229,6 +235,36 @@ class Phantom_Accounts_REST_Auth {
 		if ( is_wp_error( $user_id ) ) return $user_id;
 
 		update_user_meta( (int) $user_id, 'pl_email_verified_at', gmdate( 'c' ) );
+		return [ 'ok' => true ];
+	}
+
+	/**
+	 * Change password for a signed-in user. Verifies the current
+	 * password to authenticate the intent (in case the JWT was stolen
+	 * or a session left open).
+	 */
+	public static function change_password( WP_REST_Request $req ) {
+		$user = wp_get_current_user();
+		$rl   = 'change_pw:' . $user->ID . '|' . Phantom_Accounts_Rate_Limit::client_ip();
+		if ( ! Phantom_Accounts_Rate_Limit::check( $rl, 10, HOUR_IN_SECONDS ) ) {
+			return new WP_Error( 'rate_limited', 'Too many attempts.', [ 'status' => 429 ] );
+		}
+
+		$current = (string) $req->get_param( 'current_password' );
+		$next    = (string) $req->get_param( 'new_password' );
+
+		if ( strlen( $next ) < 10 ) {
+			return new WP_Error( 'weak_password', 'Use at least 10 characters.', [ 'status' => 400 ] );
+		}
+
+		$authed = wp_authenticate( $user->user_login, $current );
+		if ( is_wp_error( $authed ) || (int) $authed->ID !== (int) $user->ID ) {
+			return new WP_Error( 'bad_current_password', 'Current password is incorrect.', [ 'status' => 400 ] );
+		}
+
+		wp_set_password( $next, $user->ID );
+		Phantom_Accounts_Activity::log( $user->ID, 'password_changed', [] );
+
 		return [ 'ok' => true ];
 	}
 
