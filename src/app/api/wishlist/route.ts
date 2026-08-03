@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag, revalidatePath } from "next/cache";
 import { getSession } from "@/lib/wp-auth";
 import { phantom } from "@/lib/wp-fetch";
 
@@ -9,12 +10,21 @@ import { phantom } from "@/lib/wp-fetch";
  * in wp_pl_wishlist (visible on the /account/wishlist dashboard).
  *
  * Not called for guests — the button falls back to localStorage in
- * that case.
+ * that case. A guest's localStorage list is later merged in via
+ * POST /api/wishlist/merge after they sign in.
+ *
+ * Every mutation revalidates the per-user cache tag so /account/wishlist
+ * reflects changes on the next request instead of after the 30s TTL.
  */
 
 interface Body {
   product_id?: number;
   variation_id?: number;
+}
+
+function invalidateFor(userId: number) {
+  revalidateTag(`user:${userId}:wishlist`, "default");
+  revalidatePath("/account/wishlist");
 }
 
 export async function POST(req: Request) {
@@ -45,6 +55,7 @@ export async function POST(req: Request) {
           typeof body.variation_id === "number" ? body.variation_id : undefined,
       },
     });
+    invalidateFor(session.userId);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.warn(
@@ -72,6 +83,7 @@ export async function DELETE(req: Request) {
       method: "DELETE",
       bearer: session.token,
     });
+    invalidateFor(session.userId);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.warn(

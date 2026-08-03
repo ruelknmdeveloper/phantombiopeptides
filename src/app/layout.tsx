@@ -11,6 +11,7 @@ import { AgeGate } from "@/components/common/age-gate";
 import { BackToTop } from "@/components/common/back-to-top";
 import { PromoModal } from "@/components/marketing/promo-modal";
 import { TikTokPixel } from "@/components/common/tiktok-pixel";
+import { WishlistSyncOnLogin } from "@/components/product/wishlist-sync-on-login";
 import { buildMetadata, organizationJsonLd } from "@/lib/seo";
 import "./globals.css";
 
@@ -64,6 +65,7 @@ export default async function RootLayout({
         />
         <TikTokPixel />
         <Providers initialCart={null}>
+          <WishlistSyncOnLogin />
           <AgeGate />
           <PromoModal />
           <AnnouncementBar />

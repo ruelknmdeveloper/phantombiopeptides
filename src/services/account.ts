@@ -74,10 +74,14 @@ export const AccountService = {
     return phantom<NotificationPrefs>("/notifications", { bearer, revalidate: 30 });
   },
 
-  async getWishlist(bearer: string): Promise<WishlistItem[]> {
+  async getWishlist(bearer: string, userId?: number): Promise<WishlistItem[]> {
+    // Tag with the per-user cache key so /api/wishlist mutations can
+    // invalidate it targeted-ly via revalidateTag.
+    const tags = userId ? [`user:${userId}:wishlist`] : undefined;
     const res = await phantom<{ items: WishlistItem[] }>("/wishlist", {
       bearer,
       revalidate: 30,
+      tags,
     });
     return res.items ?? [];
   },

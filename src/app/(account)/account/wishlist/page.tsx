@@ -15,9 +15,10 @@ export default async function WishlistPage() {
   const session = await getSession();
   if (!session) return null;
 
-  const items = await AccountService.getWishlist(session.token).catch(
-    () => [],
-  );
+  const items = await AccountService.getWishlist(
+    session.token,
+    session.userId,
+  ).catch(() => []);
 
   // Enrich each wishlist entry with live product data in parallel.
   const enriched = await Promise.all(
