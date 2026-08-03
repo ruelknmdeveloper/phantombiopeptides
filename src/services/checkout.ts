@@ -22,6 +22,13 @@ interface CheckoutInput {
   set_paid?: boolean;
   /** Payment gateway transaction id (e.g. Stripe PaymentIntent id). */
   transaction_id?: string;
+  /**
+   * WooCommerce customer id. When the buyer is signed in, pass this
+   * so the order attaches to their account (customer_id != 0). Guest
+   * checkouts leave this undefined; the WP plugin's account-activation
+   * hook reattaches those orders by billing_email later.
+   */
+  customer_id?: number;
 }
 
 /**
@@ -90,6 +97,9 @@ export const CheckoutService = {
       body: JSON.stringify({
         status: "pending",
         line_items,
+        ...(typeof input.customer_id === "number" && input.customer_id > 0
+          ? { customer_id: input.customer_id }
+          : {}),
         ...(coupon_lines.length > 0 ? { coupon_lines } : {}),
       }),
     } as never);

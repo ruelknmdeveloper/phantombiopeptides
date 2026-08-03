@@ -99,7 +99,38 @@ const schema = z
 
 type Values = z.infer<typeof schema>;
 
-export function CheckoutForm({ cart: initialCart }: { cart: WCCart }) {
+export interface CheckoutPrefill {
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  company?: string;
+  address_1?: string;
+  address_2?: string;
+  city?: string;
+  state?: string;
+  postcode?: string;
+  country?: string;
+  phone?: string;
+  billing_first_name?: string;
+  billing_last_name?: string;
+  billing_company?: string;
+  billing_address_1?: string;
+  billing_address_2?: string;
+  billing_city?: string;
+  billing_state?: string;
+  billing_postcode?: string;
+  billing_country?: string;
+  billing_phone?: string;
+  billing_same?: boolean;
+}
+
+export function CheckoutForm({
+  cart: initialCart,
+  prefill,
+}: {
+  cart: WCCart;
+  prefill?: CheckoutPrefill;
+}) {
   const { cart: liveCart } = useCart();
   const cart = liveCart ?? initialCart;
   const stripePromise = React.useMemo(() => getStripe(), []);
@@ -145,12 +176,18 @@ export function CheckoutForm({ cart: initialCart }: { cart: WCCart }) {
 
   return (
     <Elements stripe={stripePromise} options={options}>
-      <InnerCheckoutForm cart={cart} />
+      <InnerCheckoutForm cart={cart} prefill={prefill} />
     </Elements>
   );
 }
 
-function InnerCheckoutForm({ cart }: { cart: WCCart }) {
+function InnerCheckoutForm({
+  cart,
+  prefill,
+}: {
+  cart: WCCart;
+  prefill?: CheckoutPrefill;
+}) {
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
@@ -165,9 +202,28 @@ function InnerCheckoutForm({ cart }: { cart: WCCart }) {
   } = useForm<Values>({
     resolver: zodResolver(schema),
     defaultValues: {
-      country: "US",
-      billing_same: true,
-      billing_country: "US",
+      email: prefill?.email ?? "",
+      first_name: prefill?.first_name ?? "",
+      last_name: prefill?.last_name ?? "",
+      company: prefill?.company ?? "",
+      address_1: prefill?.address_1 ?? "",
+      address_2: prefill?.address_2 ?? "",
+      city: prefill?.city ?? "",
+      state: prefill?.state ?? "",
+      postcode: prefill?.postcode ?? "",
+      country: prefill?.country || "US",
+      phone: prefill?.phone ?? "",
+      billing_same: prefill?.billing_same ?? true,
+      billing_first_name: prefill?.billing_first_name ?? "",
+      billing_last_name: prefill?.billing_last_name ?? "",
+      billing_company: prefill?.billing_company ?? "",
+      billing_address_1: prefill?.billing_address_1 ?? "",
+      billing_address_2: prefill?.billing_address_2 ?? "",
+      billing_city: prefill?.billing_city ?? "",
+      billing_state: prefill?.billing_state ?? "",
+      billing_postcode: prefill?.billing_postcode ?? "",
+      billing_country: prefill?.billing_country || "US",
+      billing_phone: prefill?.billing_phone ?? "",
     },
   });
   const billingSame = watch("billing_same");

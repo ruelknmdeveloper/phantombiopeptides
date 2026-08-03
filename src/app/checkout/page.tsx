@@ -3,9 +3,14 @@ import { ShoppingBag, KeyRound } from "lucide-react";
 import { CartService } from "@/services/cart";
 import { Breadcrumb } from "@/components/common/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { CheckoutForm } from "@/components/checkout/checkout-form";
+import {
+  CheckoutForm,
+  type CheckoutPrefill,
+} from "@/components/checkout/checkout-form";
 import { buildMetadata } from "@/lib/seo";
 import { env } from "@/env";
+import { getSession } from "@/lib/wp-auth";
+import { AccountService } from "@/services/account";
 
 export const metadata = buildMetadata({
   title: "Checkout",
@@ -16,9 +21,55 @@ export const metadata = buildMetadata({
 
 export const dynamic = "force-dynamic";
 
+async function readPrefill(): Promise<CheckoutPrefill | undefined> {
+  const session = await getSession();
+  if (!session) return undefined;
+  const profile = await AccountService.getProfile(session.token).catch(
+    () => null,
+  );
+  if (!profile) return undefined;
+
+  // Shipping fields on the form use "unprefixed" names (first_name,
+  // address_1, etc.), billing fields use "billing_" prefix. Map both
+  // from the customer's saved billing/shipping.
+  const s = profile.shipping ?? {};
+  const b = profile.billing ?? {};
+  const sameAsBilling =
+    !!s.address_1 &&
+    !!b.address_1 &&
+    s.address_1 === b.address_1 &&
+    (s.postcode ?? "") === (b.postcode ?? "");
+
+  return {
+    email: profile.email,
+    first_name: s.first_name ?? b.first_name ?? profile.first_name ?? "",
+    last_name: s.last_name ?? b.last_name ?? profile.last_name ?? "",
+    company: s.company ?? "",
+    address_1: s.address_1 ?? "",
+    address_2: s.address_2 ?? "",
+    city: s.city ?? "",
+    state: s.state ?? "",
+    postcode: s.postcode ?? "",
+    country: s.country ?? "",
+    phone: b.phone ?? profile.phone ?? "",
+    billing_same: sameAsBilling || !b.address_1,
+    billing_first_name: b.first_name ?? "",
+    billing_last_name: b.last_name ?? "",
+    billing_company: b.company ?? "",
+    billing_address_1: b.address_1 ?? "",
+    billing_address_2: b.address_2 ?? "",
+    billing_city: b.city ?? "",
+    billing_state: b.state ?? "",
+    billing_postcode: b.postcode ?? "",
+    billing_country: b.country ?? "",
+    billing_phone: b.phone ?? "",
+  };
+}
+
 export default async function CheckoutPage() {
   const cart = await CartService.get().catch(() => null);
   const hasStripe = Boolean(env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+  const prefill = await readPrefill();
 
   if (!cart || cart.items.length === 0) {
     return (
@@ -77,7 +128,7 @@ export default async function CheckoutPage() {
         </div>
       ) : (
         <div className="mt-8">
-          <CheckoutForm cart={cart} />
+          <CheckoutForm cart={cart} prefill={prefill} />
         </div>
       )}
     </div>

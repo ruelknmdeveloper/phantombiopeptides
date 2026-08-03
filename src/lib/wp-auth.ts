@@ -17,6 +17,7 @@ import { env } from "@/env";
  */
 
 const SESSION_COOKIE = "pl_session";
+const SIGNED_IN_HINT_COOKIE = "pl_signed_in";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 interface WpJwtPayload {
@@ -83,11 +84,23 @@ export async function setSessionCookie(token: string): Promise<void> {
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });
+  // Non-httpOnly companion so client components (e.g. the wishlist
+  // heart on PDPs) can detect signed-in state without exposing the
+  // JWT to JS. Value is a boolean marker; the real session is still
+  // gated by the httpOnly cookie above.
+  store.set(SIGNED_IN_HINT_COOKIE, "1", {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: SESSION_MAX_AGE,
+  });
 }
 
 export async function clearSessionCookie(): Promise<void> {
   const store = await cookies();
   store.delete(SESSION_COOKIE);
+  store.delete(SIGNED_IN_HINT_COOKIE);
 }
 
 /**

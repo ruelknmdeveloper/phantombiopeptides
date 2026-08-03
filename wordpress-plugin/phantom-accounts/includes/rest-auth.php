@@ -106,6 +106,10 @@ class Phantom_Accounts_REST_Auth {
 
 		update_user_meta( $user->ID, 'pl_source', 'checkout' );
 
+		// Attach any orphan guest orders on this email so the dashboard
+		// history isn't empty.
+		Phantom_Accounts_Orders::attach_orphan_orders( $user->ID, $email );
+
 		// Issue set-password token so the customer can activate on their
 		// own time — no password chosen at checkout.
 		$token = Phantom_Accounts_Tokens::issue(
@@ -142,6 +146,17 @@ class Phantom_Accounts_REST_Auth {
 
 		wp_set_password( $password, (int) $user_id );
 		update_user_meta( (int) $user_id, 'pl_email_verified_at', gmdate( 'c' ) );
+
+		// Setting the password from an email link is functionally an
+		// activation — attach any orphan orders on this email now that
+		// we can confirm the customer really owns the address.
+		$activating_user = get_user_by( 'id', (int) $user_id );
+		if ( $activating_user ) {
+			Phantom_Accounts_Orders::attach_orphan_orders(
+				(int) $user_id,
+				$activating_user->user_email
+			);
+		}
 
 		$jwt = Phantom_Accounts_JWT::issue_for_user( (int) $user_id );
 		if ( ! $jwt ) {
@@ -317,6 +332,10 @@ class Phantom_Accounts_REST_Auth {
 			update_user_meta( $user->ID, 'pl_marketing_consent', 1 );
 			update_user_meta( $user->ID, 'pl_marketing_consent_at', gmdate( 'c' ) );
 		}
+
+		// Attach any orphan guest orders on this email so the dashboard
+		// reflects the order they just completed.
+		Phantom_Accounts_Orders::attach_orphan_orders( $user->ID, $email );
 
 		Phantom_Accounts_Activity::log( $user->ID, 'account_created', [
 			'source'            => 'thank_you_prompt',
