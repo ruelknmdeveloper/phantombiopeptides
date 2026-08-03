@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 /**
- * One-shot client effect: when a signed-in visitor lands on any page,
- * check if localStorage holds a guest wishlist that hasn't been synced
- * to the server yet. If so, POST it to /api/wishlist/merge and stamp
- * a sessionStorage marker so we don't re-fire per-page.
+ * When a signed-in visitor lands on any page, check if localStorage
+ * holds a guest wishlist that hasn't been synced to the server yet.
+ * If so, POST it to /api/wishlist/merge and stamp a sessionStorage
+ * marker so we don't re-fire per-page.
  *
- * Sits inside <Providers> in the root layout so it mounts once per
- * SPA session. Renders nothing.
+ * NB: sits in the root layout, so it stays mounted across every soft
+ * SPA navigation. That means `useEffect(…, [])` would run *once* on
+ * initial page load and never again — missing the case where the user
+ * signs in via a server-action redirect (which is a soft navigation).
+ * Depending on `usePathname()` re-runs the effect on every route
+ * change, catching the moment `isSignedIn()` becomes true. The
+ * SYNCED_MARKER makes it idempotent per tab.
  */
 
 const LOCAL_KEY = "pl_wishlist";
@@ -24,6 +30,7 @@ function isSignedIn(): boolean {
 }
 
 export function WishlistSyncOnLogin() {
+  const pathname = usePathname();
   useEffect(() => {
     if (!isSignedIn()) return;
     if (sessionStorage.getItem(SYNCED_MARKER) === "1") return;
@@ -65,7 +72,7 @@ export function WishlistSyncOnLogin() {
       .catch(() => {
         /* silently retry next session */
       });
-  }, []);
+  }, [pathname]);
 
   return null;
 }
