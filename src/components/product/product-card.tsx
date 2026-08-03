@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ShoppingBag, Star, ArrowRight, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/hooks/use-cart";
+import { useWishlistToggle } from "@/hooks/use-wishlist-toggle";
 import { calculateDiscount, cn, formatPrice } from "@/lib/utils";
 import type { WCProduct } from "@/types";
 
@@ -31,6 +32,11 @@ export function ProductCard({
   variant = "light",
 }: ProductCardProps) {
   const { addItem, isLoading } = useCart();
+  const { saved, toggle: toggleWishlist } = useWishlistToggle({
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+  });
   const discount = product.on_sale
     ? calculateDiscount(product.regular_price, product.sale_price || product.price)
     : 0;
@@ -121,23 +127,46 @@ export function ProductCard({
           )}
         </div>
 
-        {/* Wishlist heart — bottom-right of media */}
-        <button
+        {/* Wishlist heart — bottom-right of media. Optimistic
+            localStorage toggle, plus fire-and-forget /api/wishlist
+            sync when signed in. Spring pop on state change. */}
+        <motion.button
           type="button"
-          aria-label={`Save ${product.name} to wishlist`}
+          aria-label={
+            saved
+              ? `Remove ${product.name} from wishlist`
+              : `Save ${product.name} to wishlist`
+          }
+          aria-pressed={saved}
+          whileTap={{ scale: 0.82 }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            /* wishlist placeholder — hook up later */
+            toggleWishlist();
           }}
           className={cn(
-            "glass absolute bottom-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full text-foreground/70 transition-all",
-            "opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0",
-            "hover:text-[color:hsl(var(--brand-500))]",
+            "glass absolute bottom-3 right-3 inline-flex h-9 w-9 items-center justify-center rounded-full transition-all",
+            saved
+              ? "text-[color:hsl(var(--brand-500))] opacity-100 translate-y-0"
+              : "text-foreground/70 opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 hover:text-[color:hsl(var(--brand-500))]",
           )}
         >
-          <Heart className="h-4 w-4" />
-        </button>
+          <motion.span
+            key={saved ? "on" : "off"}
+            initial={{ scale: saved ? 0.5 : 1 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 520, damping: 14 }}
+            className="inline-flex"
+          >
+            <Heart
+              className={cn(
+                "h-4 w-4",
+                saved && "fill-[color:hsl(var(--brand-500))]",
+              )}
+              strokeWidth={2}
+            />
+          </motion.span>
+        </motion.button>
       </Link>
 
       <div className="flex flex-1 flex-col gap-1.5 p-5">
