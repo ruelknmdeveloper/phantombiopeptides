@@ -68,7 +68,7 @@ export function CartDrawer() {
                     className="flex gap-4 rounded-xl border border-border/60 bg-background/40 p-3"
                   >
                     <Link
-                      href={item.permalink || `/product/${item.id}`}
+                      href={item.slug ? `/product/${item.slug}` : `/product/${item.id}`}
                       onClick={closeDrawer}
                       className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-border bg-background"
                     >
@@ -85,7 +85,7 @@ export function CartDrawer() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <Link
-                          href={item.permalink || `/product/${item.id}`}
+                          href={item.slug ? `/product/${item.slug}` : `/product/${item.id}`}
                           onClick={closeDrawer}
                           className="text-sm font-medium hover:text-primary transition-colors line-clamp-2"
                         >

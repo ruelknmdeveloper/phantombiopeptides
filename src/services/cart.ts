@@ -237,6 +237,7 @@ function buildLineItem(
     quantity: item.quantity,
     name: displayName,
     short_description: product.short_description,
+    slug: product.slug,
     permalink: product.permalink,
     images: image ? [image] : [],
     prices: {

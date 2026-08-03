@@ -143,6 +143,11 @@ export const wcCartItemSchema = z.object({
   quantity: z.number(),
   name: z.string(),
   short_description: z.string().optional().default(""),
+  // Product slug for building the storefront URL. `permalink` from
+  // WooCommerce points at the WordPress admin domain (wpcomstaging or
+  // the raw wp URL), which we never want to link to from the headless
+  // storefront.
+  slug: z.string().optional().default(""),
   permalink: z.string().optional().default(""),
   images: z.array(wcImageSchema).default([]),
   prices: z.object({
