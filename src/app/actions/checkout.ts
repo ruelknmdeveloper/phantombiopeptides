@@ -1,10 +1,16 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { CartService } from "@/services/cart";
 import { CheckoutService } from "@/services/checkout";
 import { requireStripe } from "@/lib/stripe-server";
 import type { WCAddress } from "@/types";
+
+const CHECKOUT_INTENT_COOKIE = "pl_checkout_intent";
+const CHECKOUT_INTENT_MAX_AGE = 15 * 60; // 15 minutes — long enough for the
+// customer to notice the "save this for next time?" prompt on /thank-you and
+// decide, short enough that a stale intent can't attach to someone else's session.
 
 export interface StartCheckoutInput {
   billing_address: WCAddress;
@@ -171,6 +177,29 @@ export async function finalizeCheckoutAction(
 
     await CartService.clear();
     revalidatePath("/cart");
+
+    // Set a short-lived intent cookie so /thank-you can render the
+    // "save this for next time?" activation prompt with prefilled name
+    // and email. No account is created here — the customer opts in
+    // explicitly on the thank-you page.
+    try {
+      const store = await cookies();
+      store.set(CHECKOUT_INTENT_COOKIE, JSON.stringify({
+        order_id: order.order_id,
+        email: input.billing_address.email,
+        first_name: input.billing_address.first_name,
+        last_name: input.billing_address.last_name,
+      }), {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: CHECKOUT_INTENT_MAX_AGE,
+      });
+    } catch {
+      // Cookie failure shouldn't block the redirect to /thank-you.
+    }
+
     return { ok: true, order_id: order.order_id };
   } catch (err) {
     const message =

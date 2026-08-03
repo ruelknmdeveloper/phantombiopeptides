@@ -56,6 +56,12 @@ class Phantom_Accounts_REST_Auth {
 			'permission_callback' => '__return_true',
 			'callback'            => [ __CLASS__, 'verify_email' ],
 		] );
+
+		register_rest_route( $ns, '/auth/register-and-set-password', [
+			'methods'             => 'POST',
+			'permission_callback' => [ __CLASS__, 'permit_service' ],
+			'callback'            => [ __CLASS__, 'register_and_set_password' ],
+		] );
 	}
 
 	/**
@@ -224,5 +230,72 @@ class Phantom_Accounts_REST_Auth {
 
 		update_user_meta( (int) $user_id, 'pl_email_verified_at', gmdate( 'c' ) );
 		return [ 'ok' => true ];
+	}
+
+	/**
+	 * Combined register + set-password for the /thank-you inline
+	 * activation prompt. Customer just finished checkout, chose to
+	 * save their info, and typed a password on the spot — so we
+	 * skip the whole email-token dance and issue a JWT immediately.
+	 *
+	 * Called server-to-server from Next (service token required).
+	 * Body: { email, first_name, last_name, password, marketing_consent? }
+	 */
+	public static function register_and_set_password( WP_REST_Request $req ) {
+		$email    = sanitize_email( (string) $req->get_param( 'email' ) );
+		$first    = sanitize_text_field( (string) $req->get_param( 'first_name' ) );
+		$last     = sanitize_text_field( (string) $req->get_param( 'last_name' ) );
+		$password = (string) $req->get_param( 'password' );
+		$marketing = (bool) $req->get_param( 'marketing_consent' );
+
+		if ( ! is_email( $email ) ) {
+			return new WP_Error( 'bad_email', 'Valid email required.', [ 'status' => 400 ] );
+		}
+		if ( strlen( $password ) < 10 ) {
+			return new WP_Error( 'weak_password', 'Use at least 10 characters.', [ 'status' => 400 ] );
+		}
+
+		$user = get_user_by( 'email', $email );
+		if ( ! $user ) {
+			$uid = wp_insert_user( [
+				'user_login'   => $email,
+				'user_email'   => $email,
+				'user_pass'    => $password,
+				'first_name'   => $first,
+				'last_name'    => $last,
+				'display_name' => trim( $first . ' ' . $last ) ?: $email,
+				'role'         => 'customer',
+			] );
+			if ( is_wp_error( $uid ) ) return $uid;
+			$user = get_user_by( 'id', $uid );
+		} else {
+			// Existing customer — respect their choice by resetting the
+			// password to what they just typed. They may have forgotten
+			// they already have an account.
+			wp_set_password( $password, $user->ID );
+		}
+
+		update_user_meta( $user->ID, 'pl_source', 'thank_you_prompt' );
+		update_user_meta( $user->ID, 'pl_email_verified_at', gmdate( 'c' ) );
+		if ( $marketing ) {
+			update_user_meta( $user->ID, 'pl_marketing_consent', 1 );
+			update_user_meta( $user->ID, 'pl_marketing_consent_at', gmdate( 'c' ) );
+		}
+
+		Phantom_Accounts_Activity::log( $user->ID, 'account_created', [
+			'source'            => 'thank_you_prompt',
+			'marketing_consent' => $marketing ? 1 : 0,
+		] );
+
+		$jwt = Phantom_Accounts_JWT::issue_for_user( $user->ID );
+		if ( ! $jwt ) {
+			return new WP_Error( 'jwt_unavailable', 'JWT plugin unavailable.', [ 'status' => 500 ] );
+		}
+
+		return [
+			'ok'      => true,
+			'user_id' => $user->ID,
+			'token'   => $jwt,
+		];
 	}
 }

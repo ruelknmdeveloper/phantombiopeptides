@@ -1,8 +1,11 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { CheckCircle2, Package, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buildMetadata } from "@/lib/seo";
+import { getSession } from "@/lib/wp-auth";
 import { CartRefresh } from "./cart-refresh";
+import { SaveForNextTime } from "./save-for-next-time";
 
 export const metadata = buildMetadata({
   title: "Order confirmed",
@@ -17,8 +20,39 @@ interface Props {
   searchParams: Promise<{ order?: string; key?: string }>;
 }
 
+interface CheckoutIntent {
+  order_id?: number;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+async function readIntent(orderParam: string | undefined): Promise<CheckoutIntent | null> {
+  // Only render the activation prompt when the request has a fresh
+  // pl_checkout_intent cookie from finalizeCheckoutAction AND the cookie's
+  // order id matches the URL param — prevents anyone loading a stranger's
+  // /thank-you URL from being offered account creation for that order.
+  const raw = (await cookies()).get("pl_checkout_intent")?.value;
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as CheckoutIntent;
+    if (
+      orderParam &&
+      parsed.order_id !== undefined &&
+      String(parsed.order_id) !== String(orderParam)
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
 export default async function ThankYouPage({ searchParams }: Props) {
   const { order } = await searchParams;
+  const session = await getSession();
+  const intent = session ? null : await readIntent(order);
 
   return (
     <div className="container-page py-16 md:py-24">
@@ -65,6 +99,13 @@ export default async function ThankYouPage({ searchParams }: Props) {
             <Link href="/contact">Contact support</Link>
           </Button>
         </div>
+
+        {intent && intent.email && (
+          <SaveForNextTime
+            email={intent.email}
+            firstName={intent.first_name ?? ""}
+          />
+        )}
       </div>
     </div>
   );

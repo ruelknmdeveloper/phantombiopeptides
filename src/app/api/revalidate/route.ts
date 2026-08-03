@@ -21,6 +21,8 @@ export async function POST(req: Request) {
     path?: string;
     slug?: string;
     categorySlug?: string;
+    /** WooCommerce user id — expanded into user-scoped tags. */
+    userId?: number;
   } = {};
   try {
     body = await req.json();
@@ -28,8 +30,17 @@ export async function POST(req: Request) {
     /* accept empty body */
   }
 
-  const tags = new Set<string>(["products:list", "categories:all"]);
-  const paths = new Set<string>(["/", "/shop"]);
+  const isUserPing =
+    typeof body.userId === "number" ||
+    (typeof body.tag === "string" && body.tag.startsWith("user:"));
+
+  // Only ping product/category caches for storefront invalidations. A
+  // user-scoped webhook (order.updated, wishlist change) should not
+  // rebuild every category page.
+  const tags = new Set<string>(
+    isUserPing ? [] : ["products:list", "categories:all"],
+  );
+  const paths = new Set<string>(isUserPing ? [] : ["/", "/shop"]);
 
   if (body.tag) tags.add(body.tag);
   if (body.path) paths.add(body.path);
@@ -40,6 +51,11 @@ export async function POST(req: Request) {
   if (body.categorySlug) {
     tags.add(`categories:slug:${body.categorySlug}`);
     paths.add(`/category/${body.categorySlug}`);
+  }
+  if (typeof body.userId === "number" && body.userId > 0) {
+    tags.add(`user:${body.userId}:orders`);
+    tags.add(`user:${body.userId}:wishlist`);
+    tags.add(`user:${body.userId}:profile`);
   }
 
   tags.forEach((t) => revalidateTag(t, "default"));

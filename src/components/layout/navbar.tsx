@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Search, ShoppingBag } from "lucide-react";
+import { Menu, Search, ShoppingBag, User } from "lucide-react";
 import { Logo } from "./logo";
 import { SearchOverlay } from "./search-overlay";
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,14 @@ export function Navbar() {
             >
               <Search className="h-4 w-4" />
             </button>
+            <Link
+              href="/account"
+              prefetch={false}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/40 backdrop-blur transition-all hover:border-[color:hsl(var(--brand-500))]/40 hover:text-[color:hsl(var(--brand-500))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:hsl(var(--brand-500))] focus-visible:ring-offset-2"
+              aria-label="Your account"
+            >
+              <User className="h-4 w-4" />
+            </Link>
             <button
               type="button"
               onClick={openDrawer}
@@ -161,6 +169,15 @@ export function Navbar() {
                       {item.label}
                     </Link>
                   ))}
+                  <Link
+                    href="/account"
+                    prefetch={false}
+                    onClick={() => setMobileOpen(false)}
+                    className="mt-2 flex items-center gap-3 rounded-xl border-t border-border px-4 py-3 pt-5 text-base font-medium text-foreground/80 transition hover:bg-[color:hsl(var(--brand-50))] hover:text-[color:hsl(var(--brand-500))]"
+                  >
+                    <User className="h-4 w-4" />
+                    Account
+                  </Link>
                 </nav>
               </SheetContent>
             </Sheet>
