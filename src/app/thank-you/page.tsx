@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { CheckCircle2, Package, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { buildMetadata } from "@/lib/seo";
 import { getSession } from "@/lib/wp-auth";
+import { AccountService } from "@/services/account";
 import { CartRefresh } from "./cart-refresh";
 import { SaveForNextTime } from "./save-for-next-time";
 
@@ -27,11 +29,9 @@ interface CheckoutIntent {
   last_name?: string;
 }
 
-async function readIntent(orderParam: string | undefined): Promise<CheckoutIntent | null> {
-  // Only render the activation prompt when the request has a fresh
-  // pl_checkout_intent cookie from finalizeCheckoutAction AND the cookie's
-  // order id matches the URL param — prevents anyone loading a stranger's
-  // /thank-you URL from being offered account creation for that order.
+async function readIntent(
+  orderParam: string | undefined,
+): Promise<CheckoutIntent | null> {
   const raw = (await cookies()).get("pl_checkout_intent")?.value;
   if (!raw) return null;
   try {
@@ -49,10 +49,61 @@ async function readIntent(orderParam: string | undefined): Promise<CheckoutInten
   }
 }
 
+/**
+ * The thank-you page is a *confirmation* screen — it should only
+ * render for a visitor who actually just completed a checkout on this
+ * device. Anyone else (bookmarked URL, forwarded link, curious poke)
+ * is either sent to /account/orders (signed in — they can find their
+ * real orders there) or /track-order (guest — public lookup by order#
+ * + email).
+ *
+ * Three valid access paths:
+ *   1. Fresh pl_checkout_intent cookie set by finalizeCheckoutAction
+ *      (guest or signed-in, just completed checkout)
+ *   2. Signed-in customer AND the ?order= param is one of their orders
+ *      (they may have refreshed the URL after the cookie expired)
+ *   3. No ?order= param but signed-in with an intent cookie
+ */
+async function isEntitledToViewOrderConfirmation(
+  orderParam: string | undefined,
+  intent: CheckoutIntent | null,
+  sessionUserId: number | undefined,
+): Promise<boolean> {
+  if (intent) return true;
+
+  // Signed-in customer refreshing the URL after cookie expiry — allow
+  // if the order actually belongs to them.
+  if (sessionUserId && orderParam) {
+    const orderId = parseInt(orderParam, 10);
+    if (!Number.isFinite(orderId)) return false;
+    const order = await AccountService.getOrder(sessionUserId, orderId).catch(
+      () => null,
+    );
+    return !!order;
+  }
+
+  return false;
+}
+
 export default async function ThankYouPage({ searchParams }: Props) {
   const { order } = await searchParams;
   const session = await getSession();
-  const intent = session ? null : await readIntent(order);
+  const intent = await readIntent(order);
+
+  const entitled = await isEntitledToViewOrderConfirmation(
+    order,
+    intent,
+    session?.userId,
+  );
+
+  if (!entitled) {
+    // Send them where they actually meant to go.
+    redirect(session ? "/account/orders" : "/track-order");
+  }
+
+  // Activation prompt is only for guests who just completed checkout —
+  // never for signed-in visitors (they already have an account).
+  const showActivation = !session && intent && !!intent.email;
 
   return (
     <div className="container-page py-16 md:py-24">
@@ -93,14 +144,16 @@ export default async function ThankYouPage({ searchParams }: Props) {
 
         <div className="mt-10 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link href="/shop">Continue shopping</Link>
+            <Link href={session ? "/account/orders" : "/shop"}>
+              {session ? "See your orders" : "Continue shopping"}
+            </Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/contact">Contact support</Link>
           </Button>
         </div>
 
-        {intent && intent.email && (
+        {showActivation && intent?.email && (
           <SaveForNextTime
             email={intent.email}
             firstName={intent.first_name ?? ""}
