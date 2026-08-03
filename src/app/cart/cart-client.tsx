@@ -23,7 +23,7 @@ export function CartPageClient({ initialCart }: { initialCart: WCCart }) {
             className="flex gap-4 rounded-2xl border border-border bg-card p-4"
           >
             <Link
-              href={item.permalink || `/product/${item.id}`}
+              href={item.slug ? `/product/${item.slug}` : `/product/${item.id}`}
               className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-border bg-background"
             >
               {item.images[0] && (
@@ -40,7 +40,7 @@ export function CartPageClient({ initialCart }: { initialCart: WCCart }) {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <Link
-                    href={item.permalink || `/product/${item.id}`}
+                    href={item.slug ? `/product/${item.slug}` : `/product/${item.id}`}
                     className="font-medium hover:text-primary"
                   >
                     {item.name}
