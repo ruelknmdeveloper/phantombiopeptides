@@ -40,29 +40,31 @@ async function readPrefill(): Promise<CheckoutPrefill | undefined> {
     s.address_1 === b.address_1 &&
     (s.postcode ?? "") === (b.postcode ?? "");
 
+  // NB: `||` not `??` here — WP returns empty strings for unset
+  // customer fields, and `??` only falls through on null/undefined.
   return {
     email: profile.email,
-    first_name: s.first_name ?? b.first_name ?? profile.first_name ?? "",
-    last_name: s.last_name ?? b.last_name ?? profile.last_name ?? "",
-    company: s.company ?? "",
-    address_1: s.address_1 ?? "",
-    address_2: s.address_2 ?? "",
-    city: s.city ?? "",
-    state: s.state ?? "",
-    postcode: s.postcode ?? "",
-    country: s.country ?? "",
-    phone: b.phone ?? profile.phone ?? "",
+    first_name: s.first_name || b.first_name || profile.first_name || "",
+    last_name: s.last_name || b.last_name || profile.last_name || "",
+    company: s.company || "",
+    address_1: s.address_1 || "",
+    address_2: s.address_2 || "",
+    city: s.city || "",
+    state: s.state || "",
+    postcode: s.postcode || "",
+    country: s.country || "",
+    phone: b.phone || profile.phone || "",
     billing_same: sameAsBilling || !b.address_1,
-    billing_first_name: b.first_name ?? "",
-    billing_last_name: b.last_name ?? "",
-    billing_company: b.company ?? "",
-    billing_address_1: b.address_1 ?? "",
-    billing_address_2: b.address_2 ?? "",
-    billing_city: b.city ?? "",
-    billing_state: b.state ?? "",
-    billing_postcode: b.postcode ?? "",
-    billing_country: b.country ?? "",
-    billing_phone: b.phone ?? "",
+    billing_first_name: b.first_name || "",
+    billing_last_name: b.last_name || "",
+    billing_company: b.company || "",
+    billing_address_1: b.address_1 || "",
+    billing_address_2: b.address_2 || "",
+    billing_city: b.city || "",
+    billing_state: b.state || "",
+    billing_postcode: b.postcode || "",
+    billing_country: b.country || "",
+    billing_phone: b.phone || "",
   };
 }
 
